@@ -29,12 +29,20 @@ struct FloatingPlayer: View {
 
     private func queuePanel(_ player: PlayerController) -> some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("재생 목록 · \(player.queue.count)곡").font(.caption).foregroundStyle(.secondary)
-                Spacer()
+            HStack(spacing: 8) {
                 Button("비우기") { player.clearQueue() }
                     .controlSize(.small)
                     .disabled(player.queue.isEmpty)
+                Text("재생 목록 · \(player.queue.count)곡").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { expanded = false }
+                } label: {
+                    Image(systemName: "chevron.down").font(.title3)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("재생 목록 접기")
             }
             .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 6)
 
@@ -98,14 +106,18 @@ struct FloatingPlayer: View {
                 .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 .frame(width: 38, alignment: .leading)
 
-            Button {
-                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { expanded.toggle() }
-            } label: {
-                Image(systemName: expanded ? "chevron.down" : "list.bullet")
+            // Open the queue from the compact bar. When expanded, the panel header's
+            // chevron handles collapsing, so this is hidden.
+            if !expanded {
+                Button {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { expanded = true }
+                } label: {
+                    Image(systemName: "list.bullet")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("재생 목록 펼치기")
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(expanded ? Color.accentColor : Color.secondary)
-            .help(expanded ? "재생 목록 접기" : "재생 목록 펼치기")
 
             Button { player.close() } label: { Image(systemName: "xmark") }
                 .buttonStyle(.plain).foregroundStyle(.secondary)
