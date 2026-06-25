@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 enum LibraryTab: Hashable { case saved, active }
 
@@ -28,9 +29,19 @@ struct LibraryView: View {
                         .animation(.spring(response: 0.35, dampingFraction: 0.85),
                                    value: model.player.current?.id)
                 }
-                .navigationTitle("Soundlog")
-                .navigationSubtitle("v\(model.appVersion)")
+                .navigationTitle("")
                 .toolbar {
+                    ToolbarItem(placement: .navigation) {
+                        HStack(spacing: 8) {
+                            Image(nsImage: NSApplication.shared.applicationIconImage)
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                            Text("Soundlog").font(.headline.weight(.semibold))
+                            Text("v\(model.appVersion)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                     ToolbarItem(placement: .primaryAction) {
                         Button { showSettings = true } label: { Image(systemName: "gearshape") }
                             .help("설정")
