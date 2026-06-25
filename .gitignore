@@ -1,0 +1,13 @@
+# Xcode / build
+*.xcodeproj
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# macOS
+.DS_Store
+
+# Output
+*.mp3
+dist/
