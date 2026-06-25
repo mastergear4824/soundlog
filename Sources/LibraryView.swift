@@ -32,15 +32,17 @@ struct LibraryView: View {
                 .navigationTitle("")
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
-                        HStack(spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 7) {
                             Image(nsImage: NSApplication.shared.applicationIconImage)
                                 .resizable()
-                                .frame(width: 24, height: 24)
-                            Text("Soundlog").font(.headline.weight(.semibold))
+                                .frame(width: 26, height: 26)
+                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 5 }
+                            Text("SoundLog").font(.title3.weight(.bold))
                             Text("v\(model.appVersion)")
-                                .font(.subheadline)
+                                .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
+                        .allowsHitTesting(false)
                     }
                     ToolbarItem(placement: .primaryAction) {
                         Button { showSettings = true } label: { Image(systemName: "gearshape") }
