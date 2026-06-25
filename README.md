@@ -19,11 +19,14 @@ YouTube URL을 붙여넣으면 오디오를 추출해 **태그·커버 아트가
 [Releases](https://github.com/mastergear4824/soundlog/releases) 또는 `dist/`의 DMG를 열고 **SoundLog.app**을 Applications로 드래그하세요.
 
 미서명(개인용) 앱이라 처음 실행 시 Gatekeeper 경고가 뜨면:
+
 - Applications에서 우클릭 → **열기** → **열기**, 또는
 - 터미널: `xattr -dr com.apple.quarantine /Applications/SoundLog.app`
 
 ### 필요 도구
+
 앱이 호출하는 외부 도구가 필요합니다:
+
 ```sh
 brew install yt-dlp ffmpeg
 ```
@@ -49,6 +52,19 @@ SwiftUI · Swift 6 strict concurrency · AVFoundation(재생) · [yt-dlp](https:
 
 개인 학습·소장 용도의 도구입니다. 콘텐츠 다운로드는 YouTube 이용약관 및 저작권의 적용을 받으며, 사용에 대한 책임은 사용자에게 있습니다. 재배포는 하지 마세요.
 
-## 라이선스
+## 📝 License
 
-[LICENSE](LICENSE) 참고.
+**CC BY-NC-SA 4.0** (Creative Commons Attribution-NonCommercial-ShareAlike 4.0)
+
+| Term                   | Description                  |
+| ---------------------- | ---------------------------- |
+| **Attribution (BY)**   | Give appropriate credit      |
+| **NonCommercial (NC)** | No commercial use            |
+| **ShareAlike (SA)**    | Same license for derivatives |
+
+---
+
+## 👨‍💻 Author
+
+**Mastergear (Keunjin Kim)**  
+🔗 [Facebook](https://www.facebook.com/keunjinkim00)
