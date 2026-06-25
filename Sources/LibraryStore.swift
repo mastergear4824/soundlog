@@ -73,6 +73,17 @@ final class LibraryStore {
         persist()
     }
 
+    /// Replace an existing entry in place (e.g. after metadata/lyrics enrichment).
+    func update(_ entry: LogEntry) {
+        if let i = entries.firstIndex(where: { $0.id == entry.id }) {
+            entries[i] = entry
+        } else {
+            entries.insert(entry, at: 0)
+        }
+        indexByVideoID[entry.canonicalVideoID] = entry
+        persist()
+    }
+
     func remove(_ entry: LogEntry) {
         entries.removeAll { $0.id == entry.id }
         indexByVideoID[entry.canonicalVideoID] = nil
@@ -121,6 +132,14 @@ final class LibraryStore {
             }
         }
         return nil
+    }
+
+    /// Overwrite a cached thumbnail with provided image data (e.g. iTunes cover art).
+    func saveThumbnail(videoID: String, data: Data) -> String? {
+        let fileName = "\(videoID).jpg"
+        let dest = thumbnailsDir.appendingPathComponent(fileName)
+        guard (try? data.write(to: dest, options: .atomic)) != nil else { return nil }
+        return fileName
     }
 }
 

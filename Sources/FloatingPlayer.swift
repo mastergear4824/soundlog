@@ -8,13 +8,16 @@ struct FloatingPlayer: View {
     @State private var scrubbing = false
     @State private var scrubValue: Double = 0
     @State private var expanded = false
+    @State private var panelTab: PanelTab = .queue
+
+    private enum PanelTab { case lyrics, queue }
 
     var body: some View {
         let player = model.player
         if let entry = player.current {
             VStack(spacing: 0) {
                 if expanded {
-                    queuePanel(player)
+                    expandedPanel(player, entry)
                     Divider()
                 }
                 controlRow(entry, player)
@@ -22,19 +25,31 @@ struct FloatingPlayer: View {
             .liquidGlass(cornerRadius: 18, tintWhite: 0.35, interactive: true)
             .padding(.horizontal, 12)
             .padding(.bottom, 12)
+            // Default to the lyrics tab when the track has lyrics; reset on track change.
+            .task(id: entry.id) { panelTab = entry.hasLyrics ? .lyrics : .queue }
         }
     }
 
-    // MARK: - Expanded queue (above the controls)
+    // MARK: - Expanded panel (lyrics / queue tabs)
 
-    private func queuePanel(_ player: PlayerController) -> some View {
+    private func expandedPanel(_ player: PlayerController, _ entry: LogEntry) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Button("비우기") { player.clearQueue() }
-                    .controlSize(.small)
-                    .disabled(player.queue.isEmpty)
-                Text("재생 목록 · \(player.queue.count)곡").font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Picker("", selection: $panelTab) {
+                    Text("가사").tag(PanelTab.lyrics)
+                    Text("목록 \(player.queue.count)").tag(PanelTab.queue)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+
                 Spacer()
+
+                if panelTab == .queue {
+                    Button("비우기") { player.clearQueue() }
+                        .controlSize(.small)
+                        .disabled(player.queue.isEmpty)
+                }
                 Button {
                     withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { expanded = false }
                 } label: {
@@ -42,24 +57,39 @@ struct FloatingPlayer: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                .help("재생 목록 접기")
+                .help("접기")
             }
             .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 6)
 
-            if player.queue.isEmpty {
-                Text("재생 목록이 비어 있어요")
-                    .font(.callout).foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity).padding(.vertical, 24)
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(Array(player.queue.enumerated()), id: \.element.id) { index, entry in
-                            QueueRow(entry: entry, index: index, isCurrent: index == player.currentIndex)
-                            if index < player.queue.count - 1 { Divider().padding(.leading, 40) }
-                        }
+            Divider()
+
+            Group {
+                switch panelTab {
+                case .lyrics:
+                    LyricsView(entry: entry, currentTime: player.currentTime,
+                               onSeek: { player.seek(to: $0) })
+                case .queue:
+                    queueList(player)
+                }
+            }
+            .frame(height: 300)
+        }
+    }
+
+    @ViewBuilder
+    private func queueList(_ player: PlayerController) -> some View {
+        if player.queue.isEmpty {
+            Text("재생 목록이 비어 있어요")
+                .font(.callout).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(player.queue.enumerated()), id: \.element.id) { index, entry in
+                        QueueRow(entry: entry, index: index, isCurrent: index == player.currentIndex)
+                        if index < player.queue.count - 1 { Divider().padding(.leading, 40) }
                     }
                 }
-                .frame(maxHeight: 280)
             }
         }
     }

@@ -23,6 +23,10 @@ final class AppModel {
     private(set) var missingTools: MissingTools?
     private(set) var staleHint: Bool = false
 
+    /// Entries currently being enriched (metadata/lyrics) — for per-row UI state.
+    private(set) var enrichingIDs: Set<UUID> = []
+    func isEnriching(_ id: UUID) -> Bool { enrichingIDs.contains(id) }
+
     // Settings (persisted to UserDefaults)
     var settings: AppSettings {
         didSet { persistSettings() }
@@ -228,6 +232,88 @@ final class AppModel {
         )
         library.add(entry)
         endJob()
+        // Auto-enrich: fetch canonical metadata + lyrics and rename to the song title.
+        // If nothing is found, the entry stays exactly as saved.
+        enrich(entry, auto: true)
+    }
+
+    // MARK: - Metadata / lyrics enrichment
+
+    /// Look up canonical metadata (iTunes) + lyrics (LRCLIB), embed them into the mp3, rename
+    /// the file to the song title, and update the log entry. No-op if nothing is found.
+    func enrich(_ entry: LogEntry, auto: Bool = false) {
+        guard let tools, !enrichingIDs.contains(entry.id) else { return }
+        guard FileManager.default.fileExists(atPath: entry.filePath) else { return }
+        enrichingIDs.insert(entry.id)
+        let ffmpeg = tools.ffmpeg.path
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.enrichingIDs.remove(entry.id) }
+
+            let duration = entry.durationSeconds > 0 ? entry.durationSeconds : nil
+            guard let meta = await MetadataService.search(title: entry.rawTitle, artist: nil, durationSeconds: duration) else {
+                if !auto { self.lastError = JobError(message: "메타 정보를 찾지 못했어요.", detail: entry.title) }
+                return  // keep current
+            }
+            let coverData = await Self.fetchData(meta.artworkURL)
+            let lyrics = await LyricsService.fetch(title: meta.title, artist: meta.artist,
+                                                   durationSeconds: meta.durationSeconds ?? duration)
+            do {
+                let tagged = try await TagWriter.apply(ffmpeg: ffmpeg, source: entry.fileURL,
+                                                       meta: meta, lyrics: lyrics, coverData: coverData)
+                let dir = entry.fileURL.deletingLastPathComponent()
+                let newURL = Self.enrichDestination(dir: dir, base: "\(meta.artist) - \(meta.title)", source: entry.fileURL)
+                if newURL.path == entry.fileURL.path {
+                    _ = try FileManager.default.replaceItemAt(entry.fileURL, withItemAt: tagged)
+                } else {
+                    try FileManager.default.moveItem(at: tagged, to: newURL)
+                    try? FileManager.default.removeItem(at: entry.fileURL)
+                }
+                let thumb = coverData.flatMap { self.library.saveThumbnail(videoID: entry.canonicalVideoID, data: $0) }
+                let size = (try? FileManager.default.attributesOfItem(atPath: newURL.path)[.size] as? Int64) ?? nil
+                var e = entry
+                e.title = meta.title
+                e.artist = meta.artist
+                e.album = meta.album
+                e.year = meta.year
+                e.filePath = newURL.path
+                e.fileSizeBytes = size ?? entry.fileSizeBytes
+                e.thumbnailFileName = thumb ?? entry.thumbnailFileName
+                e.syncedLyrics = lyrics?.synced
+                e.plainLyrics = lyrics?.plain
+                self.library.update(e)
+            } catch {
+                if !auto { self.lastError = JobError(message: "메타/가사 적용에 실패했어요.", detail: error.localizedDescription) }
+            }
+        }
+    }
+
+    private static func fetchData(_ urlString: String?) async -> Data? {
+        guard let urlString, let url = URL(string: urlString) else { return nil }
+        return try? await URLSession.shared.data(from: url).0
+    }
+
+    /// Collision-safe destination named after the song; returns the source path unchanged
+    /// if the clean name already matches (so re-enriching replaces in place).
+    private static func enrichDestination(dir: URL, base: String, source: URL) -> URL {
+        let name = sanitizeFilename(base)
+        let candidate = dir.appendingPathComponent("\(name).mp3")
+        if candidate.path == source.path { return source }
+        var url = candidate
+        var n = 1
+        while FileManager.default.fileExists(atPath: url.path) {
+            url = dir.appendingPathComponent("\(name) (\(n)).mp3")
+            n += 1
+        }
+        return url
+    }
+
+    private static func sanitizeFilename(_ s: String) -> String {
+        var t = s
+        for ch in ["/", ":", "\\", "?", "*", "\"", "<", ">", "|"] {
+            t = t.replacingOccurrences(of: ch, with: "_")
+        }
+        return String(t.trimmingCharacters(in: .whitespacesAndNewlines).prefix(120))
     }
 
     private func fail(_ error: JobError) {

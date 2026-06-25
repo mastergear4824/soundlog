@@ -21,11 +21,15 @@ struct LogEntry: Identifiable, Codable, Sendable, Hashable {
     var ytDlpVersion: String
     /// Original title, preserved even when clean-titles rewrites artist/title.
     var rawTitle: String
+    /// Lyrics fetched during enrichment (LRCLIB). `synced` is timestamped LRC.
+    var syncedLyrics: String?
+    var plainLyrics: String?
 
     init(id: UUID = UUID(), canonicalVideoID: String, sourceURL: String, title: String,
          artist: String? = nil, album: String? = nil, year: Int? = nil,
          durationSeconds: Int, filePath: String, fileSizeBytes: Int64,
-         thumbnailFileName: String? = nil, savedAt: Date, ytDlpVersion: String, rawTitle: String) {
+         thumbnailFileName: String? = nil, savedAt: Date, ytDlpVersion: String, rawTitle: String,
+         syncedLyrics: String? = nil, plainLyrics: String? = nil) {
         self.id = id
         self.canonicalVideoID = canonicalVideoID
         self.sourceURL = sourceURL
@@ -40,9 +44,12 @@ struct LogEntry: Identifiable, Codable, Sendable, Hashable {
         self.savedAt = savedAt
         self.ytDlpVersion = ytDlpVersion
         self.rawTitle = rawTitle
+        self.syncedLyrics = syncedLyrics
+        self.plainLyrics = plainLyrics
     }
 
     var fileURL: URL { URL(fileURLWithPath: filePath) }
+    var hasLyrics: Bool { (syncedLyrics?.isEmpty == false) || (plainLyrics?.isEmpty == false) }
 }
 
 /// Top-level JSON document with a schema version for forward migration.

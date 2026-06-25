@@ -85,6 +85,11 @@ struct LogRow: View {
             if fileMissing {
                 iconButton("arrow.clockwise.circle", "다시 받기") { model.redownload(entry) }
             } else {
+                if model.isEnriching(entry.id) {
+                    ProgressView().controlSize(.small).frame(width: 22)
+                } else {
+                    iconButton("sparkles", "메타·가사 가져오기") { model.enrich(entry) }
+                }
                 Menu {
                     Button { model.playNow(entry) } label: { Label("바로 재생", systemImage: "play.fill") }
                     Button { model.playNext(entry) } label: { Label("다음에 재생", systemImage: "text.line.first.and.arrowtriangle.forward") }
@@ -111,6 +116,8 @@ struct LogRow: View {
         Button("다음에 재생") { model.playNext(entry) }.disabled(fileMissing)
         Button("재생 목록에 추가") { model.addToQueue(entry) }.disabled(fileMissing)
         Divider()
+        Button("메타·가사 가져오기") { model.enrich(entry) }
+            .disabled(fileMissing || model.isEnriching(entry.id))
         Button("Finder에서 보기") { model.reveal(entry) }.disabled(fileMissing)
         Button("원본 URL 복사") { model.copyToPasteboard(entry.sourceURL) }
         Button("yt-dlp 명령 복사") { Task { model.copyToPasteboard(await model.copyCommand(for: entry)) } }
