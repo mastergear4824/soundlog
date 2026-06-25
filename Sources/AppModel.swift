@@ -27,6 +27,11 @@ final class AppModel {
     private(set) var enrichingIDs: Set<UUID> = []
     func isEnriching(_ id: UUID) -> Bool { enrichingIDs.contains(id) }
 
+    // Multi-select mode for bulk actions (delete / re-download) on the saved log.
+    private(set) var selectionMode = false
+    private(set) var selectedIDs: Set<UUID> = []
+    func isSelected(_ id: UUID) -> Bool { selectedIDs.contains(id) }
+
     // Settings (persisted to UserDefaults)
     var settings: AppSettings {
         didSet { persistSettings() }
@@ -347,6 +352,33 @@ final class AppModel {
                              webpageURL: entry.sourceURL, availability: nil, isLive: false,
                              track: nil, artist: entry.artist, album: entry.album, releaseYear: entry.year)
         enqueue([Job(meta: meta, url: entry.sourceURL)])
+    }
+
+    // MARK: - Selection (bulk actions)
+
+    func enterSelection() { selectionMode = true; selectedIDs = [] }
+    func exitSelection() { selectionMode = false; selectedIDs = [] }
+
+    func toggleSelected(_ id: UUID) {
+        if selectedIDs.contains(id) { selectedIDs.remove(id) } else { selectedIDs.insert(id) }
+    }
+
+    func selectAll(_ ids: [UUID]) { selectedIDs = Set(ids) }
+    func clearSelection() { selectedIDs = [] }
+
+    /// Remove the selected entries from the log (files are kept on disk).
+    func deleteSelected() {
+        for entry in library.entries where selectedIDs.contains(entry.id) {
+            library.remove(entry)
+        }
+        exitSelection()
+    }
+
+    /// Re-download the selected entries from their source URLs.
+    func redownloadSelected() {
+        let items = library.entries.filter { selectedIDs.contains($0.id) }
+        for entry in items { redownload(entry) }
+        exitSelection()
     }
 
     // MARK: - Row actions

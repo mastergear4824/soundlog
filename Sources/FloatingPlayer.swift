@@ -66,8 +66,7 @@ struct FloatingPlayer: View {
             Group {
                 switch panelTab {
                 case .lyrics:
-                    LyricsView(entry: entry, currentTime: player.currentTime,
-                               onSeek: { player.seek(to: $0) })
+                    LyricsView(entry: entry)
                 case .queue:
                     queueList(player)
                 }

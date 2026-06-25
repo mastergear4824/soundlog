@@ -9,6 +9,7 @@ struct LibraryView: View {
     @State private var search = ""
     @State private var showSettings = false
     @State private var tab: LibraryTab = .saved
+    @State private var confirmDelete = false
 
     private var jobCount: Int { (model.activeJob != nil ? 1 : 0) + model.queue.count }
     private var hasJobs: Bool { jobCount > 0 }
@@ -123,19 +124,55 @@ struct LibraryView: View {
     private var savedList: some View {
         if model.library.entries.isEmpty {
             centeredHint("아직 저장한 곡이 없어요")
-        } else if filtered.isEmpty {
-            centeredHint("검색 결과가 없어요")
         } else {
-            List {
-                ForEach(filtered) { entry in
-                    LogRow(entry: entry)
-                        .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                        .listRowBackground(Color.clear)
+            VStack(spacing: 0) {
+                selectionBar
+                if filtered.isEmpty {
+                    centeredHint("검색 결과가 없어요")
+                } else {
+                    List {
+                        ForEach(filtered) { entry in
+                            LogRow(entry: entry)
+                                .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                                .listRowBackground(Color.clear)
+                        }
+                    }
+                    .listStyle(.inset)
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .listStyle(.inset)
-            .scrollContentBackground(.hidden)
+            .confirmationDialog("선택한 \(model.selectedIDs.count)곡을 로그에서 삭제할까요? (파일은 유지됩니다)",
+                                isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("삭제", role: .destructive) { model.deleteSelected() }
+                Button("취소", role: .cancel) {}
+            }
         }
+    }
+
+    @ViewBuilder
+    private var selectionBar: some View {
+        let ids = filtered.map(\.id)
+        let allSelected = !ids.isEmpty && ids.allSatisfy { model.isSelected($0) }
+        HStack(spacing: 10) {
+            if model.selectionMode {
+                Button(allSelected ? "전체 해제" : "전체 선택") {
+                    if allSelected { model.clearSelection() } else { model.selectAll(ids) }
+                }
+                Spacer()
+                Text("\(model.selectedIDs.count)곡 선택").font(.caption).foregroundStyle(.secondary)
+                Button { model.redownloadSelected() } label: { Label("다시 받기", systemImage: "arrow.clockwise") }
+                    .disabled(model.selectedIDs.isEmpty)
+                Button(role: .destructive) { confirmDelete = true } label: { Label("삭제", systemImage: "trash") }
+                    .disabled(model.selectedIDs.isEmpty)
+                Button("완료") { model.exitSelection() }
+            } else {
+                Spacer()
+                Button { model.enterSelection() } label: { Label("선택", systemImage: "checkmark.circle") }
+            }
+        }
+        .controlSize(.small)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
     }
 
     @ViewBuilder

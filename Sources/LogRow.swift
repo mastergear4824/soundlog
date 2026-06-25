@@ -10,20 +10,32 @@ struct LogRow: View {
     @State private var coverImage: NSImage?
 
     private var fileMissing: Bool { !model.library.fileExists(for: entry) }
+    private var selecting: Bool { model.selectionMode }
+    private var selected: Bool { model.isSelected(entry.id) }
+
+    private func rowTap() {
+        if selecting { model.toggleSelected(entry.id) }
+        else if !fileMissing { model.playNow(entry) }
+    }
 
     var body: some View {
         HStack(spacing: 12) {
+            if selecting {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+            }
             cover
                 .frame(width: 52, height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .overlay(alignment: .center) {
-                    if hovering && !fileMissing {
+                    if hovering && !fileMissing && !selecting {
                         Image(systemName: "play.fill")
                             .foregroundStyle(.white)
                             .shadow(radius: 2)
                     }
                 }
-                .onTapGesture { if !fileMissing { model.playNow(entry) } }
+                .onTapGesture { rowTap() }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title).font(.body.weight(.medium)).lineLimit(1)
@@ -51,21 +63,23 @@ struct LogRow: View {
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
-            actionButtons
+            if !selecting { actionButtons }
         }
         .padding(.vertical, 7)
         .padding(.horizontal, 10)
         .background(
             RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .fill(hovering ? Color.white.opacity(0.14) : Color.clear)
+                .fill(selected ? Color.accentColor.opacity(0.16)
+                               : (hovering ? Color.white.opacity(0.14) : Color.clear))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .strokeBorder(.white.opacity(hovering ? 0.22 : 0), lineWidth: 1)
+                .strokeBorder(.white.opacity(hovering && !selecting ? 0.22 : 0), lineWidth: 1)
         )
         .contentShape(Rectangle())
+        .onTapGesture { if selecting { model.toggleSelected(entry.id) } }
         .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hovering = h } }
-        .onDrag { dragProvider() }
+        .onDrag { selecting ? NSItemProvider() : dragProvider() }
         .contextMenu { contextMenu }
         .task(id: entry.id) { await loadCover() }
     }
