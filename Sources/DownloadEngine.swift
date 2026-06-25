@@ -46,7 +46,7 @@ actor DownloadEngine {
                         guard failure.retryable else {
                             throw failure.asDownloadError
                         }
-                        continuation.yield(.info("YouTube 응답이 막혀 android_vr 클라이언트로 자동 재시도합니다…"))
+                        continuation.yield(.info("응답이 막혀 대체 클라이언트로 자동 재시도합니다…"))
                     }
 
                     // Retry with the android_vr client (works logged-out, no cookies/PO token).
