@@ -68,3 +68,9 @@ SwiftUI · Swift 6 strict concurrency · AVFoundation(재생) · [yt-dlp](https:
 
 **Mastergear (Keunjin Kim)**  
 🔗 [Facebook](https://www.facebook.com/keunjinkim00)
+
+### ☕ Support
+
+If you like this app, please consider buying me a coffee!
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/keunjin.kim)
