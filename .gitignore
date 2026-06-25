@@ -11,3 +11,6 @@ xcuserdata/
 # Output
 *.mp3
 dist/
+
+# Bundled binaries (fetched by scripts/fetch-vendor.sh)
+vendor/

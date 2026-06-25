@@ -39,3 +39,21 @@ targets:
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         COMBINE_HIDPI_IMAGES: true
+    postBuildScripts:
+      - name: Bundle vendored binaries (yt-dlp, ffmpeg)
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          BIN="$BUILT_PRODUCTS_DIR/$WRAPPER_NAME/Contents/Resources/bin"
+          if [ -d "$SRCROOT/vendor" ]; then
+            mkdir -p "$BIN"
+            for f in yt-dlp ffmpeg; do
+              if [ -f "$SRCROOT/vendor/$f" ]; then
+                cp -f "$SRCROOT/vendor/$f" "$BIN/$f"
+                chmod +x "$BIN/$f"
+              fi
+            done
+            echo "bundled binaries into $BIN"
+          else
+            echo "warning: vendor/ missing — app will fall back to system yt-dlp/ffmpeg"
+          fi

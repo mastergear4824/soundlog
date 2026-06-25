@@ -10,6 +10,9 @@ CONFIG="Release"
 DERIVED="build"
 DIST="dist"
 
+echo "==> Fetching vendored binaries (yt-dlp, ffmpeg)"
+bash scripts/fetch-vendor.sh
+
 echo "==> Regenerating project"
 xcodegen generate >/dev/null
 
@@ -25,7 +28,10 @@ ICNS="$APP/Contents/Resources/AppIcon.icns"
 VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")
 echo "==> Version $VERSION"
 
-echo "==> Ad-hoc signing"
+echo "==> Ad-hoc signing (incl. bundled binaries)"
+for b in "$APP/Contents/Resources/bin/yt-dlp" "$APP/Contents/Resources/bin/ffmpeg"; do
+  [ -f "$b" ] && codesign --force --sign - "$b"
+done
 codesign --force --deep --sign - "$APP"
 
 echo "==> Staging DMG contents"
@@ -36,15 +42,13 @@ ln -s /Applications "$STAGE/Applications"
 [ -f "$ICNS" ] && cp "$ICNS" "$STAGE/.VolumeIcon.icns"
 # Short install note for machines that hit Gatekeeper.
 cat > "$STAGE/처음 실행이 막히면 읽어주세요.txt" <<'EOF'
-SoundLog 는 개인용/미서명 앱입니다.
+SoundLog 는 개인용/미서명 앱입니다. (yt-dlp·ffmpeg 내장 — 별도 설치 불필요)
 
 설치:  SoundLog.app 을 Applications 폴더로 드래그하세요.
 
 처음 실행 시 "확인되지 않은 개발자" 경고가 뜨면:
   • Applications 에서 SoundLog 를 우클릭 → "열기" → "열기"
-  • 또는 터미널에서:  xattr -dr com.apple.quarantine /Applications/Soundlog.app
-
-필요 도구(앱이 호출):  brew install yt-dlp ffmpeg
+  • 또는 터미널에서:  xattr -dr com.apple.quarantine /Applications/SoundLog.app
 EOF
 
 mkdir -p "$DIST"

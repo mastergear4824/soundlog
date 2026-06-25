@@ -20,9 +20,27 @@ enum ToolLocator {
     /// Common install prefixes (Apple Silicon Homebrew, Intel Homebrew, MacPorts).
     static let searchDirs = ["/opt/homebrew/bin", "/usr/local/bin", "/opt/local/bin"]
 
-    /// Absolute path to a tool if it exists and is executable.
+    /// Writable override dir (~/Library/Application Support/Soundlog/bin) for self-updated tools.
+    static var overrideDir: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Soundlog/bin", isDirectory: true)
+    }
+
+    /// A binary bundled inside the app (Contents/Resources/bin), if present.
+    static func bundledPath(_ tool: String) -> String? {
+        guard let url = Bundle.main.resourceURL?.appendingPathComponent("bin/\(tool)") else { return nil }
+        return FileManager.default.isExecutableFile(atPath: url.path) ? url.path : nil
+    }
+
+    /// Absolute path to a tool: self-updated override first, then the bundled copy
+    /// (self-contained app), then a system install on PATH.
     static func locate(_ tool: String) -> String? {
-        searchDirs
+        if let dir = overrideDir?.appendingPathComponent(tool).path,
+           FileManager.default.isExecutableFile(atPath: dir) {
+            return dir
+        }
+        if let bundled = bundledPath(tool) { return bundled }
+        return searchDirs
             .map { "\($0)/\(tool)" }
             .first { FileManager.default.isExecutableFile(atPath: $0) }
     }
@@ -57,14 +75,18 @@ enum ToolLocator {
         return line
     }
 
-    /// Run `brew upgrade yt-dlp ffmpeg`. NEVER use `yt-dlp -U` on a brew-managed binary —
-    /// it corrupts the self-replacing managed file.
-    static func brewUpgrade() async throws {
-        guard let brew = locate("brew") else {
-            throw ToolError.message("Homebrew(brew)를 찾을 수 없습니다. 터미널에서 'brew upgrade yt-dlp ffmpeg'를 직접 실행하세요.")
-        }
-        let stream = ProcessRunner.run(executable: brew, arguments: ["upgrade", "yt-dlp", "ffmpeg"])
-        for try await _ in stream { /* drain to completion */ }
+    /// Download the latest standalone yt-dlp into the writable override dir, so the app can
+    /// self-heal when the bundled copy goes stale (the bundled binary inside the .app is
+    /// read-only / signed and can't replace itself).
+    static func updateYtDlp() async throws {
+        guard let dir = overrideDir else { throw ToolError.message("저장 위치를 찾을 수 없습니다.") }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = URL(string: "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos")!
+        let (tmp, _) = try await URLSession.shared.download(from: url)
+        let dest = dir.appendingPathComponent("yt-dlp")
+        try? FileManager.default.removeItem(at: dest)
+        try FileManager.default.moveItem(at: tmp, to: dest)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dest.path)
     }
 
     private static func captureFirstLine(_ path: String, _ args: [String]) async throws -> String {
@@ -80,12 +102,9 @@ struct MissingTools: Error, Sendable, Equatable {
     var ffmpeg: Bool
 
     var bannerMessage: String {
-        switch (ytDlp, ffmpeg) {
-        case (true, true):  return "yt-dlp와 ffmpeg가 필요합니다 — 터미널에서 `brew install yt-dlp ffmpeg`"
-        case (true, false): return "yt-dlp가 필요합니다 — 터미널에서 `brew install yt-dlp`"
-        case (false, true): return "ffmpeg가 필요합니다 — 터미널에서 `brew install ffmpeg`"
-        case (false, false): return ""
-        }
+        (ytDlp || ffmpeg)
+            ? "오디오 도구를 찾을 수 없습니다 — 앱을 다시 설치해 주세요 (또는 `brew install yt-dlp ffmpeg`)."
+            : ""
     }
 }
 

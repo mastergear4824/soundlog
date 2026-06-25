@@ -26,22 +26,19 @@
 - Applications에서 우클릭 → **열기** → **열기**, 또는
 - 터미널: `xattr -dr com.apple.quarantine /Applications/SoundLog.app`
 
-### 필요 도구
+### 별도 설치 불필요
 
-앱이 호출하는 외부 도구가 필요합니다:
-
-```sh
-brew install yt-dlp ffmpeg
-```
+**yt-dlp와 ffmpeg가 앱에 내장**되어 있어 따로 설치할 필요가 없습니다. (앱이 깨졌을 때를 대비해, 설정의 "yt-dlp 업데이트"로 최신 yt-dlp를 받아 둘 수 있습니다.)
 
 ## 소스에서 빌드
 
 ```sh
-brew install xcodegen yt-dlp ffmpeg
-xcodegen generate          # project.yml → SoundLog.xcodeproj
-open Soundlog.xcodeproj     # Xcode에서 실행
-# 또는 설치용 DMG까지 한 번에:
-./scripts/build-dmg.sh      # dist/Soundlog-<버전>.dmg 생성
+brew install xcodegen
+./scripts/fetch-vendor.sh   # 내장용 yt-dlp·ffmpeg 다운로드 → vendor/ (gitignored)
+xcodegen generate           # project.yml → SoundLog.xcodeproj
+open Soundlog.xcodeproj      # Xcode에서 실행
+# 또는 vendor 다운로드 + 빌드 + 설치용 DMG까지 한 번에:
+./scripts/build-dmg.sh       # dist/Soundlog-<버전>.dmg 생성
 ```
 
 - macOS 14+ / Xcode 16+ (Liquid Glass는 macOS 26+에서 활성화)
@@ -50,6 +47,13 @@ open Soundlog.xcodeproj     # Xcode에서 실행
 ## 기술 스택
 
 SwiftUI · Swift 6 strict concurrency · AVFoundation(재생) · [yt-dlp](https://github.com/yt-dlp/yt-dlp)(추출) · [ffmpeg](https://ffmpeg.org)(변환) · 단일 yt-dlp 호출 파이프라인 · 외부 프로세스 직접 스트리밍(`ProcessRunner`).
+
+## 내장 도구 / 크레딧
+
+이 앱은 다음 오픈소스 실행 파일을 **별도 바이너리로 번들**합니다(우리 코드와 정적 링크되지 않으며, 각자의 라이선스가 적용됩니다):
+
+- **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — Unlicense (public domain)
+- **[FFmpeg](https://ffmpeg.org)** — FFmpeg 및 그 구성요소의 라이선스(LGPL/GPL)를 따릅니다. 소스: <https://ffmpeg.org/download.html>
 
 ## 고지
 

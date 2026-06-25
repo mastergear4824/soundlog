@@ -311,11 +311,11 @@ final class AppModel {
 
     func upgradeTools() async {
         do {
-            try await ToolLocator.brewUpgrade()
+            try await ToolLocator.updateYtDlp()
             staleHint = false
-            _ = await bootstrap()
+            await bootstrap()
         } catch {
-            lastError = JobError(message: "업그레이드에 실패했습니다.", detail: error.localizedDescription)
+            lastError = JobError(message: "yt-dlp 업데이트에 실패했습니다.", detail: error.localizedDescription)
         }
     }
 
