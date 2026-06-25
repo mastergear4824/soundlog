@@ -39,6 +39,9 @@ struct SettingsView: View {
 
                 Section {
                     LabeledContent("버전", value: "Soundlog v\(model.appVersion)")
+                    Link(destination: URL(string: "https://github.com/mastergear4824/soundlog")!) {
+                        Label("GitHub 저장소", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
                     Text("개인용 도구입니다. 콘텐츠 다운로드는 본인 책임 하에 사용하세요.")
                         .font(.caption).foregroundStyle(.tertiary)
                 }
