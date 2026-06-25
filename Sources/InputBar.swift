@@ -10,7 +10,7 @@ struct InputBar: View {
         HStack(spacing: 10) {
             Image(systemName: "link")
                 .foregroundStyle(.secondary)
-            TextField("YouTube URL을 붙여넣으세요  (⌘V)", text: $model.urlText)
+            TextField("URL을 붙여넣으세요  (⌘V)", text: $model.urlText)
                 .textFieldStyle(.plain)
                 .font(.title3)
                 .focused($focused)

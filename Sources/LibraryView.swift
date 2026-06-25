@@ -173,7 +173,7 @@ struct LibraryView: View {
                 .foregroundStyle(.tertiary)
             Text("아직 저장한 오디오가 없어요")
                 .font(.title3.weight(.medium))
-            Text("위에 YouTube URL을 붙여넣고 저장하면 여기에 쌓입니다.")
+            Text("위에 URL을 붙여넣고 저장하면 여기에 쌓입니다.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

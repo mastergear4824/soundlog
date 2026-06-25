@@ -37,13 +37,21 @@ struct SettingsView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
 
+                Section("주의") {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text("이 앱의 사용은 YouTube 서비스 약관에 위배될 수 있습니다. 저작권이 있는 콘텐츠의 다운로드·복제는 법적 책임을 수반할 수 있으며, 모든 책임은 사용자에게 있습니다. 개인적·비상업적 용도로만 사용하세요.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section {
-                    LabeledContent("버전", value: "Soundlog v\(model.appVersion)")
+                    LabeledContent("버전", value: "SoundLog v\(model.appVersion)")
                     Link(destination: URL(string: "https://github.com/mastergear4824/soundlog")!) {
                         Label("GitHub 저장소", systemImage: "chevron.left.forwardslash.chevron.right")
                     }
-                    Text("개인용 도구입니다. 콘텐츠 다운로드는 본인 책임 하에 사용하세요.")
-                        .font(.caption).foregroundStyle(.tertiary)
                 }
             }
             .formStyle(.grouped)

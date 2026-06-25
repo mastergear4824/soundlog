@@ -93,7 +93,7 @@ final class AppModel {
         let raw = urlText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty else { input = .idle; return }
         guard YouTubeURL.looksLikeYouTube(raw), let tools else {
-            input = tools == nil ? .idle : .error("YouTube URL이 아닌 것 같아요.")
+            input = tools == nil ? .idle : .error("올바른 링크가 아닌 것 같아요.")
             return
         }
         input = .probing
