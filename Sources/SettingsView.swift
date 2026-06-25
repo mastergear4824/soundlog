@@ -41,7 +41,7 @@ struct SettingsView: View {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
-                        Text("이 앱의 사용은 YouTube 서비스 약관에 위배될 수 있습니다. 저작권이 있는 콘텐츠의 다운로드·복제는 법적 책임을 수반할 수 있으며, 모든 책임은 사용자에게 있습니다. 개인적·비상업적 용도로만 사용하세요.")
+                        Text("이용하는 스트리밍 서비스의 이용약관을 반드시 확인하세요. 콘텐츠 저장·복제가 약관에 위배되거나 저작권 관련 법적 책임을 수반할 수 있으며, 모든 책임은 사용자 본인에게 있습니다. 개인적·비상업적 용도로만 사용하세요.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

@@ -230,7 +230,7 @@ actor DownloadEngine {
         let botSignals = ["not a bot", "sign in to confirm", "http error 403", "forcing sabr",
                           "sabr", "nsig", "unable to extract", "player response", "failed to extract"]
         if botSignals.contains(where: s.contains) {
-            return (true, "YouTube가 무언가 바꿨습니다 — yt-dlp 업데이트가 필요할 수 있어요.")
+            return (true, "스트리밍 서비스 쪽이 바뀐 것 같습니다 — yt-dlp 업데이트가 필요할 수 있어요.")
         }
         if s.contains("private video") { return (false, "비공개 영상입니다.") }
         if s.contains("video unavailable") || s.contains("has been removed") || s.contains("no longer available") {
