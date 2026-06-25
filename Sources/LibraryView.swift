@@ -18,6 +18,7 @@ struct LibraryView: View {
             AmbientBackground()
             NavigationStack {
                 VStack(spacing: 0) {
+                    headerBar
                     topArea
                     Divider().opacity(0.4)
                     logArea
@@ -31,19 +32,6 @@ struct LibraryView: View {
                 }
                 .navigationTitle("")
                 .toolbar {
-                    ToolbarItem(placement: .navigation) {
-                        HStack(alignment: .firstTextBaseline, spacing: 7) {
-                            Image(nsImage: NSApplication.shared.applicationIconImage)
-                                .resizable()
-                                .frame(width: 26, height: 26)
-                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 5 }
-                            Text("SoundLog").font(.title3.weight(.bold))
-                            Text("v\(model.appVersion)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        .allowsHitTesting(false)
-                    }
                     ToolbarItem(placement: .primaryAction) {
                         Button { showSettings = true } label: { Image(systemName: "gearshape") }
                             .help("설정")
@@ -55,6 +43,25 @@ struct LibraryView: View {
         .frame(minWidth: 620, minHeight: 580)
         .task { await model.bootstrap() }
         .sheet(isPresented: $showSettings) { SettingsView() }
+    }
+
+    // MARK: - Header (app icon + name + version) — plain content, no toolbar chrome
+
+    private var headerBar: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(nsImage: NSApplication.shared.applicationIconImage)
+                .resizable()
+                .frame(width: 28, height: 28)
+                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 6 }
+            Text("SoundLog").font(.title2.weight(.bold))
+            Text("v\(model.appVersion)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 2)
     }
 
     // MARK: - Top (input + preview + status)
