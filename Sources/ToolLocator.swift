@@ -32,6 +32,17 @@ enum ToolLocator {
         return FileManager.default.isExecutableFile(atPath: url.path) ? url.path : nil
     }
 
+    /// Strip the quarantine flag from the bundled binaries. A downloaded DMG marks every nested
+    /// file as quarantined, which blocks the app from exec'ing yt-dlp/ffmpeg even after the user
+    /// approves the app via "열기"/"Open Anyway". Clearing it here means no Terminal/xattr needed.
+    static func dequarantineBundled() {
+        guard let dir = Bundle.main.resourceURL?.appendingPathComponent("bin") else { return }
+        for tool in ["yt-dlp", "ffmpeg"] {
+            _ = removexattr(dir.appendingPathComponent(tool).path, "com.apple.quarantine", 0)
+        }
+        _ = removexattr(dir.path, "com.apple.quarantine", 0)
+    }
+
     /// Absolute path to a tool: self-updated override first, then the bundled copy
     /// (self-contained app), then a system install on PATH.
     static func locate(_ tool: String) -> String? {

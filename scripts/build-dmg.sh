@@ -46,9 +46,12 @@ SoundLog 는 개인용/미서명 앱입니다. (yt-dlp·ffmpeg 내장 — 별도
 
 설치:  SoundLog.app 을 Applications 폴더로 드래그하세요.
 
-처음 실행 시 "확인되지 않은 개발자" 경고가 뜨면:
-  • Applications 에서 SoundLog 를 우클릭 → "열기" → "열기"
-  • 또는 터미널에서:  xattr -dr com.apple.quarantine /Applications/SoundLog.app
+처음 한 번만 허용이 필요합니다 (터미널 불필요):
+  • macOS 15 이상: SoundLog 실행 → 차단되면 시스템 설정 → 개인정보 보호 및 보안
+    하단의 "그래도 열기" 클릭 → 암호 입력
+  • macOS 14: SoundLog 우클릭(Control-클릭) → "열기" → "열기"
+
+한 번 허용하면 이후엔 그냥 실행됩니다.
 EOF
 
 mkdir -p "$DIST"

@@ -84,6 +84,7 @@ final class AppModel {
     // MARK: - Bootstrap
 
     func bootstrap() async {
+        ToolLocator.dequarantineBundled()   // let bundled yt-dlp/ffmpeg run without Terminal
         library.load()
         switch await ToolLocator.resolve() {
         case .success(let t):
